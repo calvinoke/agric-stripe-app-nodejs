@@ -2,8 +2,8 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const nodemailer = require('nodemailer'); // For sending emails
-require('dotenv').config(); // Load environment variables
+const nodemailer = require('nodemailer');
+require('dotenv').config();
 
 const router = express.Router();
 
@@ -14,31 +14,30 @@ const tokenBlacklist = new Set();
 const transporter = nodemailer.createTransport({
     service: 'Gmail', // Replace with your email service provider
     auth: {
-        user: process.env.EMAIL_USER, // Your email
-        pass: process.env.EMAIL_PASS, // Your email password
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
     },
 });
 
 router.post('/register', async (req, res) => {
     try {
-      const { username, email, password, role } = req.body;
-  
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({ message: 'Email is already registered' });
-      }
-  
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const newUser = new User({ username, email, password: hashedPassword, role });
-      const result = await newUser.save();
-  
-      res.status(201).json({ message: 'User registered successfully', user: result });
+        const { username, email, password, role } = req.body;
+
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email is already registered' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new User({ username, email, password: hashedPassword, role });
+        const result = await newUser.save();
+
+        res.status(201).json({ message: 'User registered successfully', user: result });
     } catch (error) {
-      console.error("Error registering user:", error);
-      res.status(500).json({ message: 'An error occurred during registration', error });
+        console.error("Error registering user:", error);
+        res.status(500).json({ message: 'An error occurred during registration', error });
     }
-  });
-  
+});
 
 // Login route
 router.post('/login', async (req, res) => {
@@ -61,7 +60,7 @@ const isTokenBlacklisted = (req, res, next) => {
 };
 
 // Protect routes with token verification
-router.use(isTokenBlacklisted); // Use middleware to check blacklisted tokens
+router.use(isTokenBlacklisted);
 
 // Middleware to verify if the user is an admin
 const isAdmin = (req, res, next) => {
@@ -74,6 +73,16 @@ const isAdmin = (req, res, next) => {
         next();
     });
 };
+
+// Get all users with roles (admin only)
+router.get('/users', isAdmin, async (req, res) => {
+    try {
+        const users = await User.find({}, 'username email role'); // Fetch users with selected fields
+        res.json({ users });
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching users' });
+    }
+});
 
 // Update user endpoint (admin only)
 router.put('/users/:id', isAdmin, async (req, res) => {
@@ -116,9 +125,9 @@ router.delete('/users/:id', isAdmin, async (req, res) => {
 
 // Logout route
 router.post('/logout', (req, res) => {
-    const token = req.headers['authorization']?.split(' ')[1]; // Get token from Authorization header
+    const token = req.headers['authorization']?.split(' ')[1];
     if (token) {
-        tokenBlacklist.add(token); // Add token to blacklist
+        tokenBlacklist.add(token);
         return res.json({ message: 'User logged out successfully' });
     }
     res.status(400).json({ message: 'No token provided' });
@@ -132,11 +141,9 @@ router.post('/forgot-password', async (req, res) => {
         return res.status(404).json({ message: 'User not found' });
     }
 
-    // Create a password reset token
     const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
     const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
-    // Send email with the reset link
     try {
         await transporter.sendMail({
             to: email,
@@ -161,7 +168,6 @@ router.post('/reset-password/:token', async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Hash the new password and save
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         user.password = hashedPassword;
         await user.save();

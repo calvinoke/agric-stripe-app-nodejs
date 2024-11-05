@@ -5,9 +5,9 @@ const dotenv = require('dotenv');
 const ngrok = require('ngrok');
 
 // Import routes
-const authRoutes = require('./Routes/auth');
-const productRoutes = require('./Routes/products');
-const paymentRoutes = require('./Routes/Payments');
+const authRoutes = require('./api/auth');
+const productRoutes = require('./api/products');
+const paymentRoutes = require('./api/Payments');
 
 // Load environment variables
 dotenv.config();
