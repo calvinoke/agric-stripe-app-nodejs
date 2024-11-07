@@ -25,6 +25,11 @@ app.use('/api', authRoutes);
 app.use('/api', productRoutes);
 app.use('/api', paymentRoutes);
 
+
+//app.get("/", (req, res) => {
+//  res.json({ message: "Hello World, from Ethan, Calvin and Sarah and their animals, and house and bussines!"})
+//});
+
 // Start HTTP server
 app.listen(PORT, () => {
   console.log(`HTTP Server is running on http://0.0.0.0:${PORT}`);
