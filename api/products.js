@@ -16,6 +16,7 @@ const storage = multer.diskStorage({
         cb(null, Date.now() + '-' + file.originalname); // Unique file name
     }
 });
+
 const upload = multer({ storage });
 
 // Customer: Fetch all products
