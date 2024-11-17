@@ -28,3 +28,24 @@ app.use('/api', require('./api/Payments'));
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
+//incase you want to use IPadress on the mobile device and access the resource
+// Get the IP address of the server
+/**const getLocalIPAddress = () => {
+  const os = require('os');
+  const networkInterfaces = os.networkInterfaces();
+  for (const interfaceName in networkInterfaces) {
+    const interfaces = networkInterfaces[interfaceName];
+    for (const iface of interfaces) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return 'localhost';
+};
+
+app.listen(PORT, () => {
+  const ip = getLocalIPAddress();
+  console.log(`Server running on http://${ip}:${PORT}`);
+}); **/
