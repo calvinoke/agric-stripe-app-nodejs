@@ -8,36 +8,33 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Dynamic CORS configuration based on environment
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : '*',
+  origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : '*', // Allow all origins during development
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 app.use(cors(corsOptions));
-
-// Or enable CORS only for specific origins (for production)
-app.use(cors({
-  origin: 'http://localhost:3000'  // Allow requests from your frontend
-}));
-
 app.use(bodyParser.json());
 
-// Connect to MongoDB
+// MongoDB Connection
 require('./config/db');
 
-// Use routes
+// API Routes
 app.use('/api', require('./api/auth'));
 app.use('/api', require('./api/products'));
 app.use('/api', require('./api/Payments'));
 
+// Start Server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
 
-//incase you want to use IPadress on the mobile device and access the resource
-// Get the IP address of the server
-/**const getLocalIPAddress = () => {
+// OPTIONAL: Enable mobile access using the local IP address
+// Uncomment this block to log the local IP address (useful for mobile devices)
+/*
+const getLocalIPAddress = () => {
   const os = require('os');
   const networkInterfaces = os.networkInterfaces();
   for (const interfaceName in networkInterfaces) {
@@ -54,4 +51,5 @@ app.listen(PORT, () => {
 app.listen(PORT, () => {
   const ip = getLocalIPAddress();
   console.log(`Server running on http://${ip}:${PORT}`);
-}); **/
+});
+*/
