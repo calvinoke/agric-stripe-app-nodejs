@@ -15,6 +15,12 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// Or enable CORS only for specific origins (for production)
+app.use(cors({
+  origin: 'http://localhost:3000'  // Allow requests from your frontend
+}));
+
 app.use(bodyParser.json());
 
 // Connect to MongoDB
