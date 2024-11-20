@@ -199,4 +199,30 @@ router.post('/reset-password/:token', async (req, res) => {
     }
 });
 
+
+// New route: Validate token
+router.post('/validate-token', (req, res) => {
+    const token = req.headers['authorization']?.split(' ')[1];
+
+    if (!token) {
+        return res.status(400).json({ message: 'Token is required' });
+    }
+
+    // Check if the token is blacklisted
+    if (tokenBlacklist.has(token)) {
+        return res.status(401).json({ message: 'Token is invalidated' });
+    }
+
+    // Verify the token
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ message: 'Invalid or expired token' });
+        }
+
+        // Respond with token details
+        res.json({ message: 'Token is valid', decoded });
+    });
+});
+
+
 module.exports = router;
