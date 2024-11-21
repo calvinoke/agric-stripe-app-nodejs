@@ -10,6 +10,7 @@ const router = express.Router();
 // Simple in-memory token blacklist (use a database in production)
 const tokenBlacklist = new Set();
 
+
 // Setup nodemailer transport
 const transporter = nodemailer.createTransport({
     service: 'Gmail', // Replace with your email service provider
@@ -18,6 +19,7 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASS,
     },
 });
+
 
 router.post('/register', async (req, res) => {
     try {
@@ -60,6 +62,7 @@ router.post('/register', async (req, res) => {
     }
 });
 
+
 // Login route
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
@@ -79,6 +82,7 @@ const isTokenBlacklisted = (req, res, next) => {
     }
     next();
 };
+
 
 // Protect routes with token verification
 router.use(isTokenBlacklisted);
@@ -105,6 +109,7 @@ router.get('/users', isAdmin, async (req, res) => {
     }
 });
 
+
 // Update user endpoint (admin only)
 router.put('/users/:id', isAdmin, async (req, res) => {
     const { id } = req.params;
@@ -127,6 +132,7 @@ router.put('/users/:id', isAdmin, async (req, res) => {
     }
 });
 
+
 // Delete user endpoint (admin only)
 router.delete('/users/:id', isAdmin, async (req, res) => {
     const { id } = req.params;
@@ -144,6 +150,7 @@ router.delete('/users/:id', isAdmin, async (req, res) => {
     }
 });
 
+
 // Logout route
 router.post('/logout', (req, res) => {
     const token = req.headers['authorization']?.split(' ')[1];
@@ -153,6 +160,7 @@ router.post('/logout', (req, res) => {
     }
     res.status(400).json({ message: 'No token provided' });
 });
+
 
 // Forgot Password route
 router.post('/forgot-password', async (req, res) => {
@@ -200,27 +208,13 @@ router.post('/reset-password/:token', async (req, res) => {
 });
 
 
-// New route: Validate token
-router.post('/validate-token', (req, res) => {
-    const token = req.headers['authorization']?.split(' ')[1];
+app.post('/validate-token', (req, res) => {
+    const token = req.body.token;
+    if (!token) return res.status(400).send('Token required');
 
-    if (!token) {
-        return res.status(400).json({ message: 'Token is required' });
-    }
-
-    // Check if the token is blacklisted
-    if (tokenBlacklist.has(token)) {
-        return res.status(401).json({ message: 'Token is invalidated' });
-    }
-
-    // Verify the token
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) {
-            return res.status(401).json({ message: 'Invalid or expired token' });
-        }
-
-        // Respond with token details
-        res.json({ message: 'Token is valid', decoded });
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).send('Invalid token');
+        res.status(200).send({ isValid: true, user });
     });
 });
 
