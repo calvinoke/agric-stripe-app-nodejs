@@ -208,15 +208,29 @@ router.post('/reset-password/:token', async (req, res) => {
 });
 
 
-app.post('/validate-token', (req, res) => {
-    const token = req.body.token;
-    if (!token) return res.status(400).send('Token required');
+router.post('/validate-token', (req, res) => {
+    const { token } = req.body;
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).send('Invalid token');
-        res.status(200).send({ isValid: true, user });
+    // Check if token is provided
+    if (!token) {
+        return res.status(400).json({ isValid: false, message: 'Token is required' });
+    }
+
+    // Verify the token
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(403).json({ isValid: false, message: 'Invalid or expired token' });
+        }
+
+        // Return success response with limited user details
+        const { id, email, role } = decoded;
+        res.status(200).json({
+            isValid: true,
+            user: { id, email, role },
+        });
     });
 });
+
 
 
 module.exports = router;
