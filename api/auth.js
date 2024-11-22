@@ -209,12 +209,13 @@ router.post('/reset-password/:token', async (req, res) => {
 
 
 router.post('/validate-token', (req, res) => {
-    const { token } = req.body;
-
-    // Check if token is provided
-    if (!token) {
-        return res.status(400).json({ isValid: false, message: 'Token is required' });
+    // Extract token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ isValid: false, message: 'Authorization header missing or malformed' });
     }
+
+    const token = authHeader.split(' ')[1]; // Extract token
 
     // Verify the token
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
@@ -230,6 +231,7 @@ router.post('/validate-token', (req, res) => {
         });
     });
 });
+
 
 
 
