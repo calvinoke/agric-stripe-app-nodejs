@@ -212,7 +212,10 @@ router.post('/validate-token', (req, res) => {
     // Extract token from Authorization header
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ isValid: false, message: 'Authorization header missing or malformed' });
+        return res.status(401).json({
+            valid: false,
+            message: 'Authorization header missing or malformed',
+        });
     }
 
     const token = authHeader.split(' ')[1]; // Extract token
@@ -220,13 +223,16 @@ router.post('/validate-token', (req, res) => {
     // Verify the token
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
-            return res.status(403).json({ isValid: false, message: 'Invalid or expired token' });
+            return res.status(403).json({
+                valid: false,
+                message: 'Token is expired or invalid',
+            });
         }
 
         // Return success response with limited user details
         const { id, email, role } = decoded;
-        res.status(200).json({
-            isValid: true,
+        return res.status(200).json({
+            valid: true,
             user: { id, email, role },
         });
     });
