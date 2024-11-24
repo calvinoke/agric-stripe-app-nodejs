@@ -25,6 +25,11 @@ router.post('/register', async (req, res) => {
     try {
         const { username, email, password, role } = req.body;
 
+        // Validate input
+        if (!username || !email || !password || !role) {
+            return res.status(400).json({ message: 'All fields are required' });
+        }
+
         // Check if the email is already registered
         const existingUser = await User.findOne({ email });
         if (existingUser) {
@@ -35,15 +40,28 @@ router.post('/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Create a new user
-        const newUser = new User({ username, email, password: hashedPassword, role });
+        const newUser = new User({
+            username,
+            email,
+            password: hashedPassword,
+            role,
+        });
+
+        // Save the user to the database
         const result = await newUser.save();
 
         // Generate a JWT token
-        const token = jwt.sign(
-            { id: result._id, email: result.email, role: result.role },
-            process.env.JWT_SECRET, // Use an environment variable for the secret key
-            { expiresIn: '1h' } // Token expiration time
-        );
+        let token;
+        try {
+            token = jwt.sign(
+                { id: result._id, email: result.email, role: result.role },
+                process.env.JWT_SECRET, // Ensure this is defined in your environment variables
+                { expiresIn: '1h' }
+            );
+        } catch (err) {
+            console.error("Error generating JWT token:", err);
+            return res.status(500).json({ message: 'Token generation failed' });
+        }
 
         // Respond with user details and token
         res.status(201).json({
@@ -57,6 +75,7 @@ router.post('/register', async (req, res) => {
             token,
         });
     } catch (error) {
+        // Log the error and respond
         console.error("Error registering user:", error);
         res.status(500).json({ message: 'An error occurred during registration', error });
     }
