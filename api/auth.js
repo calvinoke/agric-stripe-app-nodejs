@@ -228,7 +228,7 @@ router.post('/reset-password/:token', async (req, res) => {
 });
 
 
-router.post('/validate-token', (req, res) => {
+router.get('/validate-token', (req, res) => {
     // Extract token from Authorization header
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
