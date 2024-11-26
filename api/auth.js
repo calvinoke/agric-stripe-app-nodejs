@@ -227,36 +227,32 @@ router.post('/reset-password/:token', async (req, res) => {
     }
 });
 
-
-router.get('/validate-token', (req, res) => {
-    // Extract token from Authorization header
+//Consistent Token Verification Middleware:
+const verifyToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({
-            valid: false,
-            message: 'Authorization header missing or malformed',
-        });
+        return res.status(401).json({ message: 'Authorization header missing or malformed' });
     }
 
-    const token = authHeader.split(' ')[1]; // Extract token
-
-    // Verify the token
+    const token = authHeader.split(' ')[1];//extracting the token...
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
-            return res.status(403).json({
-                valid: false,
-                message: 'Token is expired or invalid',
-            });
+            return res.status(403).json({ message: 'Token is expired or invalid' });
         }
+        req.user = decoded; // Attach user info to request
+        next();
+    });
+};
 
-        // Return success response with limited user details
-        const { id, email, role } = decoded;
-        return res.status(200).json({
-            valid: true,
-            user: { id, email, role },
-        });
+
+router.get('/validate-token', verifyToken, (req, res) => {
+    const { id, email, role } = req.user;
+    res.status(200).json({
+        valid: true,
+        user: { id, email, role },
     });
 });
+
 
 
 
