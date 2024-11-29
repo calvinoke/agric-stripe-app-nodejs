@@ -24,62 +24,44 @@ const transporter = nodemailer.createTransport({
 router.post('/register', async (req, res) => {
     try {
         const { username, email, password, role } = req.body;
+        console.log("Request received for registration:", { username, email, role });
 
-        // Validate input
         if (!username || !email || !password || !role) {
+            console.error("Validation failed: Missing required fields");
             return res.status(400).json({ message: 'All fields are required' });
         }
 
-        // Check if the email is already registered
         const existingUser = await User.findOne({ email });
         if (existingUser) {
+            console.error("Email already registered:", email);
             return res.status(400).json({ message: 'Email is already registered' });
         }
 
-        // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
+        console.log("Password hashed successfully");
 
-        // Create a new user
-        const newUser = new User({
-            username,
-            email,
-            password: hashedPassword,
-            role,
-        });
-
-        // Save the user to the database
+        const newUser = new User({ username, email, password: hashedPassword, role });
         const result = await newUser.save();
+        console.log("User saved successfully:", result);
 
-        // Generate a JWT token
-        let token;
-        try {
-            token = jwt.sign(
-                { id: result._id, email: result.email, role: result.role },
-                process.env.JWT_SECRET, // Ensure this is defined in your environment variables
-                { expiresIn: '1h' }
-            );
-        } catch (err) {
-            console.error("Error generating JWT token:", err);
-            return res.status(500).json({ message: 'Token generation failed' });
-        }
+        const token = jwt.sign(
+            { id: result._id, email: result.email, role: result.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+        console.log("JWT generated successfully");
 
-        // Respond with user details and token
         res.status(201).json({
             message: 'User registered successfully',
-            user: {
-                id: result._id,
-                username: result.username,
-                email: result.email,
-                role: result.role,
-            },
+            user: { id: result._id, username: result.username, email: result.email, role: result.role },
             token,
         });
     } catch (error) {
-        // Log the error and respond
         console.error("Error registering user:", error);
         res.status(500).json({ message: 'An error occurred during registration', error });
     }
 });
+
 
 
 // Login route
